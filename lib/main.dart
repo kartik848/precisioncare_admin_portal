@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,6 +13,7 @@ import 'providers/catalog_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/report_provider.dart';
 import 'providers/notification_provider.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/main_navigation_screen.dart';
@@ -64,10 +66,10 @@ class PrecisionCareApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
       child: MaterialApp(
-        title: 'PrecisionCare Diagnostic Centre',
+        title: kIsWeb ? 'PrecisionCare - Admin Operations Portal' : 'PrecisionCare Diagnostic Centre',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
+        home: kIsWeb ? const AdminDashboardScreen() : const SplashScreen(),
       ),
     );
   }
