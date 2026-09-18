@@ -33,7 +33,7 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedNavIndex = 0;
+  int _selectedNavIndex = 4; // Default to Diagnostic Test Catalog & Category Management
 
   final List<String> _navTitles = [
     'Incoming Booking Requests',
