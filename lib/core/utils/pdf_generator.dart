@@ -113,7 +113,7 @@ class PdfReportGenerator {
                     style: pw.TextStyle(
                       fontSize: 14,
                       fontWeight: pw.FontWeight.bold,
-                      color: const PdfColor.fromInt(0xFF0E8388),
+                      color: const PdfColor.fromInt(0xFFE11D48),
                     ),
                   ),
                   pw.SizedBox(height: 2),
@@ -122,7 +122,7 @@ class PdfReportGenerator {
                     style: pw.TextStyle(
                       fontSize: 7.5,
                       fontWeight: pw.FontWeight.bold,
-                      color: const PdfColor.fromInt(0xFF144272),
+                      color: const PdfColor.fromInt(0xFF0F172A),
                     ),
                   ),
                   pw.SizedBox(height: 2),
@@ -138,7 +138,7 @@ class PdfReportGenerator {
                   ),
                   pw.Text(
                     '24/7 Diagnostics Helpline: ${AppStrings.helplineNumber}',
-                    style: const pw.TextStyle(fontSize: 7.5, color: PdfColor.fromInt(0xFF0E8388)),
+                    style: const pw.TextStyle(fontSize: 7.5, color: PdfColor.fromInt(0xFFE11D48)),
                   ),
                 ],
               ),
@@ -147,7 +147,7 @@ class PdfReportGenerator {
             pw.Container(
               padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: const pw.BoxDecoration(
-                color: PdfColor.fromInt(0xFFCBE4DE),
+                color: PdfColor.fromInt(0xFFFFF0F3),
                 borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
               ),
               child: pw.Text(
@@ -155,14 +155,14 @@ class PdfReportGenerator {
                 style: pw.TextStyle(
                   fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
-                  color: const PdfColor.fromInt(0xFF0E8388),
+                  color: const PdfColor.fromInt(0xFFE11D48),
                 ),
               ),
             ),
           ],
         ),
         pw.SizedBox(height: 6),
-        pw.Divider(thickness: 1.5, color: const PdfColor.fromInt(0xFF0E8388)),
+        pw.Divider(thickness: 1.5, color: const PdfColor.fromInt(0xFFE11D48)),
       ],
     );
   }
@@ -190,7 +190,7 @@ class PdfReportGenerator {
             children: [
               _infoRow('Report ID:', report.id),
               _infoRow('Test Date:', DateFormatter.formatDate(report.testDate)),
-              _infoRow('Status:', report.status.toUpperCase(), isBold: true, color: const PdfColor.fromInt(0xFF0E8388)),
+              _infoRow('Status:', report.status.toUpperCase(), isBold: true, color: const PdfColor.fromInt(0xFFE11D48)),
             ],
           ),
         ],
@@ -227,7 +227,7 @@ class PdfReportGenerator {
     return pw.Container(
       width: double.infinity,
       padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      color: const PdfColor.fromInt(0xFF2E4F4F),
+      color: const PdfColor.fromInt(0xFF0F172A),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
@@ -327,7 +327,7 @@ class PdfReportGenerator {
         children: [
           pw.Text(
             'CLINICAL SUMMARY & INTERPRETATION:',
-            style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFF0E8388)),
+            style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFFE11D48)),
           ),
           pw.SizedBox(height: 3),
           pw.Text(
@@ -368,7 +368,7 @@ class PdfReportGenerator {
                 style: pw.TextStyle(
                   fontSize: 9,
                   fontStyle: pw.FontStyle.italic,
-                  color: const PdfColor.fromInt(0xFF0E8388),
+                  color: const PdfColor.fromInt(0xFFE11D48),
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),

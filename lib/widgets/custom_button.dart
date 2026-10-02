@@ -36,7 +36,7 @@ class CustomButton extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: backgroundColor ?? AppColors.primary, width: 1.5),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           child: isLoading
               ? const SizedBox(
@@ -60,8 +60,9 @@ class CustomButton extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: textColor ?? AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14.5,
+                          letterSpacing: 0.1,
                         ),
                       ),
                     ),
@@ -80,7 +81,7 @@ class CustomButton extends StatelessWidget {
           backgroundColor: backgroundColor ?? AppColors.primary,
           foregroundColor: textColor ?? Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
         ),
         child: isLoading
@@ -105,8 +106,9 @@ class CustomButton extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: textColor ?? Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14.5,
+                        letterSpacing: 0.1,
                       ),
                     ),
                   ),

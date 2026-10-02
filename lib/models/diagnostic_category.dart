@@ -93,7 +93,7 @@ class DiagnosticCategory {
       case 'package':
         return const Color(0xFFEA580C);
       default:
-        return const Color(0xFF0E8388);
+        return const Color(0xFFE11D48);
     }
   }
 }

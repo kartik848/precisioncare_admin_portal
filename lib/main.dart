@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -13,28 +11,13 @@ import 'providers/catalog_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/report_provider.dart';
 import 'providers/notification_provider.dart';
+import 'screens/admin/admin_login_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
-import 'screens/splash/splash_screen.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/home/main_navigation_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set preferred orientation and system UI overlay
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ),
-  );
-
-  // Initialize Firebase safely
+  // Initialize Live Firebase
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -43,16 +26,16 @@ Future<void> main() async {
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
-    debugPrint('✓ Live Firebase & Firestore connected (precision-care-2ab84)');
+    debugPrint('✓ Live Firebase & Firestore online connected (precision-care-2ab84)');
   } catch (e) {
-    debugPrint('Firebase initialization notice: $e');
+    debugPrint('Firebase Admin notice: $e');
   }
 
-  runApp(const PrecisionCareApp());
+  runApp(const PrecisionCareAdminApp());
 }
 
-class PrecisionCareApp extends StatelessWidget {
-  const PrecisionCareApp({super.key});
+class PrecisionCareAdminApp extends StatelessWidget {
+  const PrecisionCareAdminApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -66,17 +49,17 @@ class PrecisionCareApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
       child: MaterialApp(
-        title: kIsWeb ? 'PrecisionCare - Admin Operations Portal' : 'PrecisionCare Diagnostic Centre',
+        title: 'PrecisionCare Admin Portal',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: kIsWeb ? const AdminDashboardScreen() : const SplashScreen(),
+        home: const AdminAuthGate(),
       ),
     );
   }
 }
 
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
+class AdminAuthGate extends StatelessWidget {
+  const AdminAuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -84,16 +67,33 @@ class AuthGate extends StatelessWidget {
 
     if (authProvider.isLoading) {
       return const Scaffold(
+        backgroundColor: Color(0xFF0F172A),
         body: Center(
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Verifying Admin Session...',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    if (authProvider.isAuthenticated) {
-      return const MainNavigationScreen();
+    if (authProvider.isAuthenticated && authProvider.isAdmin) {
+      return const AdminDashboardScreen();
     }
 
-    return const LoginScreen();
+    return const AdminLoginScreen();
   }
 }

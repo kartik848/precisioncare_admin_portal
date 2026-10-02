@@ -111,23 +111,28 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF0F3),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFFECDD3)),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F3),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFFECDD3)),
+                          ),
+                          child: const Icon(Icons.category_rounded, color: Color(0xFFE11D48), size: 20),
                         ),
-                        child: const Icon(Icons.category_rounded, color: Color(0xFFE11D48), size: 20),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        isEditing ? 'Edit Category' : 'Create New Category',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                    ],
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            isEditing ? 'Edit Category' : 'Create New Category',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded, size: 20),

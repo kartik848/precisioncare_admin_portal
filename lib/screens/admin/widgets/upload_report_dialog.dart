@@ -125,15 +125,20 @@ class _UploadReportDialogState extends State<UploadReportDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.upload_file_rounded, color: AppColors.primary, size: 24),
-                      SizedBox(width: 8),
-                      Text(
-                        'Upload Diagnostic Report',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-                      ),
-                    ],
+                  const Expanded(
+                    child: Row(
+                      children: [
+                        Icon(Icons.upload_file_rounded, color: AppColors.primary, size: 24),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Upload Diagnostic Report',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),

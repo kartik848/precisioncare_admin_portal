@@ -12,6 +12,10 @@ class AuthProvider with ChangeNotifier {
   UserProfile? get user => _user;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null;
+  bool get isAdmin =>
+      _user != null &&
+      (_user!.email.trim().toLowerCase() == 'admin@gmail.com' ||
+          _user!.uid.toLowerCase().contains('admin'));
   String? get errorMessage => _errorMessage;
 
   AuthProvider() {

@@ -46,17 +46,73 @@ class _AddTestDialogState extends State<AddTestDialog> {
 
   final List<String> _iconOptions = ['blood', 'xray', 'ecg', 'physio', 'pft', 'usg', 'heart', 'body'];
 
+  Map<String, String> _getCategoryDefaults(String catId) {
+    switch (catId) {
+      case 'cat_xray':
+        return {
+          'sampleType': 'Direct Digital Radiography (DR)',
+          'prep': 'Wear loose clothing without metal buttons, zippers, or necklaces.',
+          'tat': 'Digital film + Radiologist Report in 2-3 Hours',
+        };
+      case 'cat_blood':
+        return {
+          'sampleType': 'Blood (Serum / EDTA)',
+          'prep': '10-12 hours overnight fasting required. Water intake allowed.',
+          'tat': 'Report within 4-6 Hours',
+        };
+      case 'cat_ecg':
+        return {
+          'sampleType': '12-Lead Electrocardiography Tracing',
+          'prep': 'Wear comfortable loose upper garments. Relax 5 mins prior.',
+          'tat': 'Instant Tracing + MD Cardiologist Sign-off in 2 Hours',
+        };
+      case 'cat_usg':
+        return {
+          'sampleType': 'High-Resolution 4D Ultrasound',
+          'prep': '4-6 hours fasting for upper abdomen. Full bladder required.',
+          'tat': 'Same Day with Radiologist Consultation',
+        };
+      case 'cat_pft':
+        return {
+          'sampleType': 'Computerized Flow-Volume Spirometry',
+          'prep': 'Avoid heavy meals 2 hours before. Avoid inhalers 4 hours prior if advised.',
+          'tat': 'Immediate Graph + Pulmonologist Report in 2 Hours',
+        };
+      case 'cat_physio':
+        return {
+          'sampleType': 'Clinical / Home Modality Session',
+          'prep': 'Wear comfortable stretchable athletic clothing.',
+          'tat': 'Scheduled Slot',
+        };
+      case 'cat_packages':
+        return {
+          'sampleType': 'Blood & Urine Samples (85+ Parameters)',
+          'prep': '10-12 hours strict overnight fasting mandatory.',
+          'tat': 'Detailed Digital Report within 12-24 Hours',
+        };
+      default:
+        return {
+          'sampleType': 'Clinical Examination / Diagnostic Sample',
+          'prep': 'No special preparation needed.',
+          'tat': 'Same Day',
+        };
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    final initialCatId = widget.testToEdit?.categoryId ?? widget.initialCategoryId ?? 'cat_blood';
+    final defaults = _getCategoryDefaults(initialCatId);
+
     _titleController = TextEditingController(text: widget.testToEdit?.title ?? '');
-    _categoryNameController = TextEditingController(text: widget.testToEdit?.categoryName ?? 'Digital X-Ray');
+    _categoryNameController = TextEditingController(text: widget.testToEdit?.categoryName ?? (widget.initialCategoryName ?? ''));
     _priceController = TextEditingController(text: widget.testToEdit?.price.toInt().toString() ?? '499');
     _origPriceController = TextEditingController(text: widget.testToEdit?.originalPrice?.toInt().toString() ?? '899');
     _descController = TextEditingController(text: widget.testToEdit?.description ?? 'Comprehensive diagnostic investigation with verified laboratory reporting.');
-    _prepController = TextEditingController(text: widget.testToEdit?.preparation ?? '10-12 hours fasting required. Water intake allowed.');
-    _sampleTypeController = TextEditingController(text: widget.testToEdit?.sampleType ?? 'Blood (Serum)');
-    _tatController = TextEditingController(text: widget.testToEdit?.turnaroundTime ?? 'Report within 6 Hours');
+    _prepController = TextEditingController(text: widget.testToEdit?.preparation ?? defaults['prep']);
+    _sampleTypeController = TextEditingController(text: widget.testToEdit?.sampleType ?? defaults['sampleType']);
+    _tatController = TextEditingController(text: widget.testToEdit?.turnaroundTime ?? defaults['tat']);
     _badgeController = TextEditingController(text: widget.testToEdit?.badge ?? 'Popular');
 
     if (widget.testToEdit != null) {
@@ -138,15 +194,20 @@ class _AddTestDialogState extends State<AddTestDialog> {
 
     // Ensure _selectedCategoryId is valid and synchronized
     if (_selectedCategoryId == null && adminCats.isNotEmpty) {
-      _selectedCategoryId = adminCats.first.id;
-      _categoryNameController.text = adminCats.first.name;
-      _iconType = adminCats.first.iconType;
+      final defaultCat = widget.initialCategoryId != null
+          ? adminCats.firstWhere((c) => c.id == widget.initialCategoryId, orElse: () => adminCats.first)
+          : adminCats.first;
+      _selectedCategoryId = defaultCat.id;
+      if (_categoryNameController.text.isEmpty) {
+        _categoryNameController.text = defaultCat.name;
+      }
+      _iconType = defaultCat.iconType;
     } else if (!isEditing && _selectedCategoryId != null && adminCats.isNotEmpty) {
       final matching = adminCats.firstWhere(
         (c) => c.id == _selectedCategoryId,
         orElse: () => adminCats.first,
       );
-      if (_categoryNameController.text.isEmpty || _categoryNameController.text == 'Digital X-Ray') {
+      if (_categoryNameController.text.isEmpty) {
         _categoryNameController.text = matching.name;
       }
       _iconType = matching.iconType;
@@ -165,15 +226,20 @@ class _AddTestDialogState extends State<AddTestDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 22),
-                      const SizedBox(width: 8),
-                      Text(
-                        isEditing ? 'Edit Catalog Item' : 'Add to Catalog',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                    ],
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 22),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            isEditing ? 'Edit Catalog Item' : 'Add to Catalog',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => Navigator.pop(context)),
                 ],
@@ -296,6 +362,12 @@ class _AddTestDialogState extends State<AddTestDialog> {
                                   } else {
                                     _category = ServiceCategory.inHouseDiagnostic;
                                   }
+
+                                  // Dynamically update sampleType, prep & tat to match newly chosen category
+                                  final newDefaults = _getCategoryDefaults(found.id);
+                                  _sampleTypeController.text = newDefaults['sampleType']!;
+                                  _prepController.text = newDefaults['prep']!;
+                                  _tatController.text = newDefaults['tat']!;
                                 });
                               }
                             },

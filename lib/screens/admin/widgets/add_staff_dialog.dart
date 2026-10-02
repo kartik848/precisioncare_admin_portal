@@ -97,15 +97,20 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.person_add_alt_1_rounded, color: AppColors.primary, size: 22),
-                        const SizedBox(width: 8),
-                        Text(
-                          isEditing ? 'Edit Staff Member' : 'Add Medical Staff',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                        ),
-                      ],
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person_add_alt_1_rounded, color: AppColors.primary, size: 22),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isEditing ? 'Edit Staff Member' : 'Add Medical Staff',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => Navigator.pop(context)),
                   ],

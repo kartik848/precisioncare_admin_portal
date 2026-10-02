@@ -31,7 +31,7 @@ class CatalogService {
       preparation: '10-12 hours overnight fasting required. Water intake allowed.',
       sampleType: 'Blood (Serum & EDTA) & Urine',
       turnaroundTime: 'Report within 12 Hours',
-      iconType: 'blood',
+      iconType: 'package',
       isHomeVisitAvailable: true,
       isInHouseAvailable: true,
       badge: 'Most Popular',
@@ -463,7 +463,21 @@ class CatalogService {
         debugPrint('Catalog stream notice: $e');
       }).map((snapshot) {
         if (snapshot.docs.isNotEmpty) {
-          final list = snapshot.docs.map((doc) => DiagnosticService.fromMap(doc.data(), doc.id)).toList();
+          final list = snapshot.docs.map((doc) {
+            final data = doc.data();
+            final service = DiagnosticService.fromMap(data, doc.id);
+            // If data was healed, write back to Firestore to permanently fix
+            if (_firestore != null && (data['categoryId'] != service.categoryId || data['categoryName'] != service.categoryName)) {
+              _firestore!.collection('catalog').doc(service.id).update({
+                'categoryId': service.categoryId,
+                'categoryName': service.categoryName,
+                'iconType': service.iconType,
+                'sampleType': service.sampleType,
+                'preparation': service.preparation,
+              }).catchError((_) {});
+            }
+            return service;
+          }).toList();
           _cachedServices = list;
           _saveServicesLocally(list);
           return list;
@@ -482,7 +496,20 @@ class CatalogService {
       try {
         final snapshot = await _firestore!.collection('catalog').get();
         if (snapshot.docs.isNotEmpty) {
-          final list = snapshot.docs.map((doc) => DiagnosticService.fromMap(doc.data(), doc.id)).toList();
+          final list = snapshot.docs.map((doc) {
+            final data = doc.data();
+            final service = DiagnosticService.fromMap(data, doc.id);
+            if (data['categoryId'] != service.categoryId || data['categoryName'] != service.categoryName) {
+              _firestore!.collection('catalog').doc(service.id).update({
+                'categoryId': service.categoryId,
+                'categoryName': service.categoryName,
+                'iconType': service.iconType,
+                'sampleType': service.sampleType,
+                'preparation': service.preparation,
+              }).catchError((_) {});
+            }
+            return service;
+          }).toList();
           _cachedServices = list;
           await _saveServicesLocally(list);
           return list;

@@ -22,7 +22,7 @@ class FieldWorkOrderPdfGenerator {
             // 1. HEADER
             _buildHeader(booking),
             pw.SizedBox(height: 8),
-            pw.Divider(thickness: 1.5, color: const PdfColor.fromInt(0xFF0E8388)),
+            pw.Divider(thickness: 1.5, color: const PdfColor.fromInt(0xFFE11D48)),
             pw.SizedBox(height: 6),
 
             // 2. WORK ORDER META & VISIT INFO
@@ -73,7 +73,7 @@ class FieldWorkOrderPdfGenerator {
                 style: pw.TextStyle(
                   fontSize: 14,
                   fontWeight: pw.FontWeight.bold,
-                  color: const PdfColor.fromInt(0xFF0E8388),
+                  color: const PdfColor.fromInt(0xFFE11D48),
                 ),
               ),
               pw.SizedBox(height: 2),
@@ -98,7 +98,7 @@ class FieldWorkOrderPdfGenerator {
               ),
               pw.Text(
                 '24x7 Support & Helpline: ${AppStrings.helplineNumber}',
-                style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFF0E8388)),
+                style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFFE11D48)),
               ),
             ],
           ),
@@ -107,7 +107,7 @@ class FieldWorkOrderPdfGenerator {
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: const pw.BoxDecoration(
-            color: PdfColor.fromInt(0xFF0E8388),
+            color: PdfColor.fromInt(0xFFE11D48),
             borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
           ),
           child: pw.Column(
@@ -146,7 +146,7 @@ class FieldWorkOrderPdfGenerator {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text('BOOKING ID: ${booking.id}', style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFF0F172A))),
-          pw.Text(visitLabel, style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFF0E8388))),
+          pw.Text(visitLabel, style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFFE11D48))),
           pw.Text('SLOT: ${booking.timeSlot}', style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold)),
         ],
       ),
@@ -235,7 +235,7 @@ class FieldWorkOrderPdfGenerator {
               pw.Text('DISPATCH STATUS:', style: pw.TextStyle(fontSize: 7.5, color: PdfColors.grey700)),
               pw.Text(
                 booking.status.displayName.toUpperCase(),
-                style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFF0E8388)),
+                style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFFE11D48)),
               ),
             ],
           ),
@@ -302,7 +302,7 @@ class FieldWorkOrderPdfGenerator {
           ),
           pw.Expanded(
             flex: 2,
-            child: pw.Text(tubeGuide, style: const pw.TextStyle(fontSize: 8, color: PdfColor.fromInt(0xFF0E8388))),
+            child: pw.Text(tubeGuide, style: const pw.TextStyle(fontSize: 8, color: PdfColor.fromInt(0xFFE11D48))),
           ),
           pw.Expanded(
             flex: 2,

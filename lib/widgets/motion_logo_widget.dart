@@ -210,7 +210,7 @@ class _MotionLogoState extends State<MotionLogo> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF0E8388).withOpacity(0.35),
+                          color: const Color(0xFFE11D48).withOpacity(0.25),
                           width: 1.5,
                         ),
                       ),
@@ -245,7 +245,7 @@ class _MotionLogoState extends State<MotionLogo> with TickerProviderStateMixin {
                                 offset: const Offset(0, 4),
                               ),
                               BoxShadow(
-                                color: const Color(0xFF0E8388).withOpacity(0.12),
+                                color: const Color(0xFFE84C3D).withOpacity(0.12),
                                 blurRadius: 24,
                                 spreadRadius: -2,
                                 offset: const Offset(0, 8),

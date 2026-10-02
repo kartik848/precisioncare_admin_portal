@@ -5,6 +5,13 @@ import '../models/test_report.dart';
 import '../models/app_notification.dart';
 import '../models/staff_model.dart';
 import '../models/promo_banner.dart';
+import '../models/health_package.dart';
+import '../services/package_service.dart';
+import '../models/lab_section.dart';
+import '../services/lab_section_service.dart';
+import '../models/home_collection.dart';
+import '../services/home_collection_service.dart';
+import '../services/home_defaults.dart';
 import '../models/user_profile.dart';
 import '../models/diagnostic_service.dart';
 import '../models/diagnostic_category.dart';
@@ -23,6 +30,9 @@ class AdminProvider with ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
   final StaffService _staffService = StaffService();
   final BannerService _bannerService = BannerService();
+  final PackageService _packageService = PackageService();
+  final LabSectionService _labSectionService = LabSectionService();
+  final HomeCollectionService _collectionService = HomeCollectionService();
   final AuthService _authService = AuthService();
   final CatalogService _catalogService = CatalogService();
   final CategoryService _categoryService = CategoryService();
@@ -31,12 +41,18 @@ class AdminProvider with ChangeNotifier {
   StreamSubscription<List<UserProfile>>? _usersStreamSub;
   StreamSubscription<List<StaffMember>>? _staffStreamSub;
   StreamSubscription<List<PromoBanner>>? _bannersStreamSub;
+  StreamSubscription<List<HealthPackage>>? _packagesStreamSub;
+  StreamSubscription<List<LabAudience>>? _labStreamSub;
+  StreamSubscription<List<HomeCollection>>? _collectionsStreamSub;
   StreamSubscription<List<DiagnosticService>>? _catalogStreamSub;
   StreamSubscription<List<DiagnosticCategory>>? _categoriesStreamSub;
 
   List<BookingModel> _allBookings = [];
   List<StaffMember> _staffList = [];
   List<PromoBanner> _banners = [];
+  List<HealthPackage> _packages = [];
+  List<LabAudience> _labAudiences = [];
+  List<HomeCollection> _homeCollections = [];
   List<UserProfile> _usersList = [];
   List<DiagnosticService> _catalogServices = [];
   List<DiagnosticCategory> _categories = [];
@@ -48,6 +64,9 @@ class AdminProvider with ChangeNotifier {
   List<StaffMember> get staffList => _staffList;
   List<StaffMember> get activeStaffList => _staffList.where((s) => s.isActive).toList();
   List<PromoBanner> get banners => _banners;
+  List<HealthPackage> get packages => _packages;
+  List<LabAudience> get labAudiences => _labAudiences;
+  List<HomeCollection> get homeCollections => _homeCollections;
   List<UserProfile> get usersList => _usersList;
   List<DiagnosticCategory> get categories =>
       _categories.isNotEmpty ? _categories : CategoryService.defaultCategories;
@@ -83,6 +102,15 @@ class AdminProvider with ChangeNotifier {
     _startUsersSync();
     _startStaffSync();
     _startBannersSync();
+    _startPackagesSync();
+    _labStreamSub = _labSectionService.streamAudiences().listen((list) {
+      _labAudiences = list;
+      notifyListeners();
+    });
+    _collectionsStreamSub = _collectionService.streamCollections().listen((list) {
+      _homeCollections = list;
+      notifyListeners();
+    });
     _startCatalogSync();
     _startCategoriesSync();
   }
@@ -119,6 +147,14 @@ class AdminProvider with ChangeNotifier {
     });
   }
 
+  void _startPackagesSync() {
+    _packagesStreamSub?.cancel();
+    _packagesStreamSub = _packageService.streamPackages().listen((list) {
+      _packages = list;
+      notifyListeners();
+    });
+  }
+
   void _startCatalogSync() {
     _catalogStreamSub?.cancel();
     _catalogStreamSub = _catalogService.streamServices().listen((services) {
@@ -141,6 +177,9 @@ class AdminProvider with ChangeNotifier {
     _usersStreamSub?.cancel();
     _staffStreamSub?.cancel();
     _bannersStreamSub?.cancel();
+    _packagesStreamSub?.cancel();
+    _labStreamSub?.cancel();
+    _collectionsStreamSub?.cancel();
     _catalogStreamSub?.cancel();
     _categoriesStreamSub?.cancel();
     super.dispose();
@@ -212,6 +251,66 @@ class AdminProvider with ChangeNotifier {
     await _bannerService.deleteBanner(id);
     await fetchBanners();
     return true;
+  }
+
+  // HEALTH PACKAGE MANAGEMENT
+  Future<void> addOrUpdatePackage(HealthPackage pkg) async {
+    await _packageService.savePackage(pkg);
+    _packages = await _packageService.getPackages();
+    notifyListeners();
+  }
+
+  Future<void> deletePackage(String id) async {
+    await _packageService.deletePackage(id);
+    _packages = await _packageService.getPackages();
+    notifyListeners();
+  }
+
+  // LAB SECTIONS (For Women → Adult Women → packages & tests)
+  Future<void> saveLabAudience(LabAudience audience) => _labSectionService.saveAudience(audience);
+
+  Future<void> deleteLabAudience(String id) => _labSectionService.deleteAudience(id);
+
+  Future<void> saveLabSubcategory(LabAudience audience, LabSubcategory sub) {
+    final subs = [...audience.subcategories];
+    final i = subs.indexWhere((s) => s.id == sub.id);
+    i >= 0 ? subs[i] = sub : subs.add(sub);
+    return saveLabAudience(audience.copyWith(subcategories: subs));
+  }
+
+  Future<void> deleteLabSubcategory(LabAudience audience, String subId) => saveLabAudience(
+        audience.copyWith(subcategories: audience.subcategories.where((s) => s.id != subId).toList()),
+      );
+
+  /// Seeds sections already filled with matching catalog tests, so the admin only adds photos.
+  Future<void> seedStarterLabSections() async {
+    for (final a in HomeDefaults.audiences(catalogServices)) {
+      await _labSectionService.saveAudience(a);
+    }
+  }
+
+  // HOME COLLECTIONS (Fever, Lifestyle, Athlete, Specialised tests…)
+  Future<void> saveHomeCollection(HomeCollection c) => _collectionService.saveCollection(c);
+
+  Future<void> deleteHomeCollection(String id) => _collectionService.deleteCollection(id);
+
+  Future<void> saveCollectionGroup(HomeCollection c, LabSubcategory group) {
+    final fresh = _homeCollections.firstWhere((x) => x.id == c.id, orElse: () => c);
+    final groups = [...fresh.groups];
+    final i = groups.indexWhere((g) => g.id == group.id);
+    i >= 0 ? groups[i] = group : groups.add(group);
+    return saveHomeCollection(fresh.copyWith(groups: groups));
+  }
+
+  Future<void> deleteCollectionGroup(HomeCollection c, String groupId) {
+    final fresh = _homeCollections.firstWhere((x) => x.id == c.id, orElse: () => c);
+    return saveHomeCollection(fresh.copyWith(groups: fresh.groups.where((g) => g.id != groupId).toList()));
+  }
+
+  Future<void> seedStarterCollections() async {
+    for (final c in HomeDefaults.collections(catalogServices)) {
+      await _collectionService.saveCollection(c);
+    }
   }
 
   // USER DIRECTORY & BLOCKING

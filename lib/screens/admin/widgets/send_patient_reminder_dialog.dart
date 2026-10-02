@@ -174,15 +174,20 @@ class _SendPatientReminderDialogState extends State<SendPatientReminderDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.campaign_rounded, color: AppColors.accent, size: 26),
-                        SizedBox(width: 8),
-                        Text(
-                          'Push Patient Reminder & Alert',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-                        ),
-                      ],
+                    const Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.campaign_rounded, color: AppColors.accent, size: 26),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Push Patient Reminder & Alert',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, size: 20),

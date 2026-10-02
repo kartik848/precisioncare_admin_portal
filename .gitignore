@@ -1,0 +1,15 @@
+# Flutter / Dart tooling
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+*.iml
+.idea/
+.vscode/
+.DS_Store
+
+# Build output: only build/web is committed (served by Vercel)
+/build/*
+!/build/web/

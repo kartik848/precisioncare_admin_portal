@@ -87,7 +87,7 @@ class AuthService {
     final cleanEmail = email.trim().toLowerCase();
     final cleanPassword = password.trim();
 
-    // 1. Admin Credentials Check (For Web Admin)
+    // 1. Admin Credentials Check
     if (cleanEmail == 'admin@gmail.com' && cleanPassword == '1234') {
       final adminProfile = UserProfile(
         uid: 'admin_precisioncare_001',
@@ -96,7 +96,7 @@ class AuthService {
         sex: 'Male',
         address: 'PrecisionCare Diagnostic Centre, Health City',
         mobile: '+91 92709 88595',
-        email: 'admin@gmail.com',
+        email: cleanEmail,
       );
       await _cacheUserLocally(adminProfile);
       return adminProfile;

@@ -43,11 +43,63 @@ class DiagnosticService {
   });
 
   factory DiagnosticService.fromMap(Map<String, dynamic> map, String id) {
+    var catId = map['categoryId'] as String?;
+    var catName = (map['categoryName'] ?? 'General') as String;
+    var icon = (map['iconType'] ?? 'blood') as String;
+    var sampleType = (map['sampleType'] ?? 'N/A') as String;
+    var preparation = (map['preparation'] ?? 'No special preparation needed') as String;
+    final title = (map['title'] ?? '') as String;
+    final titleLower = title.toLowerCase();
+
+    // Auto-heal / sanitize miscategorized items from database:
+    // 1. If it's a blood test, strictly assign to Blood Tests (NOT X-Ray)
+    if (titleLower.contains('blood') ||
+        titleLower.contains('cbc') ||
+        titleLower.contains('lipid') ||
+        titleLower.contains('thyroid') ||
+        titleLower.contains('glucose') ||
+        titleLower.contains('sugar') ||
+        titleLower.contains('diabetes') ||
+        titleLower.contains('hemoglobin') ||
+        titleLower.contains('hba1c') ||
+        titleLower.contains('platelet') ||
+        titleLower.contains('cholesterol') ||
+        titleLower.contains('serum')) {
+      if (catId == 'cat_xray' || catName.toLowerCase().contains('x-ray') || catName.toLowerCase().contains('xray')) {
+        catId = 'cat_blood';
+        catName = 'Blood Tests';
+        icon = 'blood';
+        if (sampleType.toLowerCase().contains('radiography') || sampleType == 'N/A') {
+          sampleType = 'Blood (Serum)';
+        }
+      }
+    }
+    // 2. If it's an X-Ray test, strictly assign to Digital X-Ray
+    else if (titleLower.contains('x-ray') ||
+        titleLower.contains('xray') ||
+        titleLower.contains('radiograph') ||
+        titleLower.contains('pns') ||
+        titleLower.contains('sinus') ||
+        titleLower.contains('knee joints') ||
+        titleLower.contains('pelvis with') ||
+        titleLower.contains('spine x-ray') ||
+        titleLower.contains('chest x-ray')) {
+      catId = 'cat_xray';
+      catName = 'Digital X-Ray';
+      icon = 'xray';
+      if (sampleType.toLowerCase().contains('blood') || sampleType == 'N/A') {
+        sampleType = 'Direct Digital Radiography (DR)';
+      }
+      if (preparation.toLowerCase().contains('fasting')) {
+        preparation = 'Wear loose clothing without metal buttons, zippers, or jewelry.';
+      }
+    }
+
     return DiagnosticService(
       id: id,
-      title: map['title'] ?? '',
-      categoryName: map['categoryName'] ?? 'General',
-      categoryId: map['categoryId'],
+      title: title,
+      categoryName: catName,
+      categoryId: catId,
       category: ServiceCategory.values.firstWhere(
         (c) => c.name == map['category'],
         orElse: () => ServiceCategory.homeVisit,
@@ -55,14 +107,52 @@ class DiagnosticService {
       description: map['description'] ?? '',
       price: (map['price'] as num?)?.toDouble() ?? 0.0,
       originalPrice: (map['originalPrice'] as num?)?.toDouble(),
-      preparation: map['preparation'] ?? 'No special preparation needed',
-      sampleType: map['sampleType'] ?? 'N/A',
+      preparation: preparation,
+      sampleType: sampleType,
       turnaroundTime: map['turnaroundTime'] ?? 'Same Day (6-12 Hours)',
-      iconType: map['iconType'] ?? 'blood',
+      iconType: icon,
       isHomeVisitAvailable: map['isHomeVisitAvailable'] ?? true,
       isInHouseAvailable: map['isInHouseAvailable'] ?? true,
       badge: map['badge'],
       includedTests: List<String>.from(map['includedTests'] ?? []),
+    );
+  }
+
+  DiagnosticService copyWith({
+    String? id,
+    String? title,
+    String? categoryName,
+    String? categoryId,
+    ServiceCategory? category,
+    String? description,
+    double? price,
+    double? originalPrice,
+    String? preparation,
+    String? sampleType,
+    String? turnaroundTime,
+    String? iconType,
+    bool? isHomeVisitAvailable,
+    bool? isInHouseAvailable,
+    String? badge,
+    List<String>? includedTests,
+  }) {
+    return DiagnosticService(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      categoryName: categoryName ?? this.categoryName,
+      categoryId: categoryId ?? this.categoryId,
+      category: category ?? this.category,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      originalPrice: originalPrice ?? this.originalPrice,
+      preparation: preparation ?? this.preparation,
+      sampleType: sampleType ?? this.sampleType,
+      turnaroundTime: turnaroundTime ?? this.turnaroundTime,
+      iconType: iconType ?? this.iconType,
+      isHomeVisitAvailable: isHomeVisitAvailable ?? this.isHomeVisitAvailable,
+      isInHouseAvailable: isInHouseAvailable ?? this.isInHouseAvailable,
+      badge: badge ?? this.badge,
+      includedTests: includedTests ?? this.includedTests,
     );
   }
 

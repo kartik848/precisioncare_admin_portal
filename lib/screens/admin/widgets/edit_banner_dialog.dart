@@ -26,8 +26,14 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
   late TextEditingController _badgeController;
   late TextEditingController _actionTextController;
 
+  late TextEditingController _urlController;
+
   String? _uploadedImageUrl;
   bool _isActive = true;
+  String _placement = PromoBanner.placementTop;
+  // none | url | package | test | section | category
+  String _linkType = 'none';
+  String? _linkValue;
   bool _isUploading = false;
 
   @override
@@ -39,6 +45,9 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
     _actionTextController = TextEditingController(text: widget.banner.actionText);
     _uploadedImageUrl = widget.banner.imageUrl;
     _isActive = widget.banner.isActive;
+    _placement = widget.banner.placement;
+    _urlController = TextEditingController();
+    _parseLink(widget.banner.linkUrl);
 
     _titleController.addListener(() => setState(() {}));
     _subtitleController.addListener(() => setState(() {}));
@@ -51,7 +60,33 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
     _subtitleController.dispose();
     _badgeController.dispose();
     _actionTextController.dispose();
+    _urlController.dispose();
     super.dispose();
+  }
+
+  void _parseLink(String link) {
+    final sep = link.indexOf(':');
+    final scheme = sep > 0 ? link.substring(0, sep) : '';
+    if (link.isEmpty) {
+      _linkType = 'none';
+    } else if (const ['package', 'test', 'section', 'category'].contains(scheme)) {
+      _linkType = scheme;
+      _linkValue = link.substring(sep + 1);
+    } else {
+      _linkType = 'url';
+      _urlController.text = link;
+    }
+  }
+
+  String _composeLink() {
+    switch (_linkType) {
+      case 'url':
+        return _urlController.text.trim();
+      case 'none':
+        return '';
+      default:
+        return (_linkValue == null || _linkValue!.isEmpty) ? '' : '$_linkType:$_linkValue';
+    }
   }
 
   Future<void> _handleDirectDeviceUpload() async {
@@ -86,7 +121,10 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
       badge: _badgeController.text.trim(),
       actionText: _actionTextController.text.trim(),
       imageUrl: _uploadedImageUrl,
+      clearImage: true,
       isActive: _isActive,
+      placement: _placement,
+      linkUrl: _composeLink(),
     );
 
     await context.read<AdminProvider>().addOrUpdateBanner(updated);
@@ -159,7 +197,7 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
                           border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
+                              color: Colors.black.withValues(alpha: 0.06),
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
@@ -187,8 +225,8 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.black.withOpacity(0.65),
-                                        Colors.black.withOpacity(0.2),
+                                        Colors.black.withValues(alpha: 0.65),
+                                        Colors.black.withValues(alpha: 0.2),
                                         Colors.transparent,
                                       ],
                                       stops: const [0.0, 0.45, 1.0],
@@ -238,7 +276,7 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
                                         Text(
                                           _subtitleController.text,
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(0.9),
+                                            color: Colors.white.withValues(alpha: 0.9),
                                             fontSize: 10.5,
                                             shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
                                           ),
@@ -358,7 +396,7 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withOpacity(0.4),
+                    color: AppColors.primaryLight.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.primaryLight),
                   ),
@@ -416,19 +454,19 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
 
                 CustomTextField(
                   controller: _titleController,
-                  label: 'Banner Main Headline *',
+                  label: 'Banner Main Headline',
                   hint: 'e.g. Free Home Sample Collection',
                   prefixIcon: Icons.title_rounded,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Enter headline' : null,
+                  validator: (v) =>
+                      _uploadedImageUrl == null && (v == null || v.trim().isEmpty) ? 'Enter headline (or upload a photo)' : null,
                 ),
                 const SizedBox(height: 12),
 
                 CustomTextField(
                   controller: _subtitleController,
-                  label: 'Subtitle / Offer Details *',
+                  label: 'Subtitle / Offer Details',
                   hint: 'e.g. Flat 20% OFF on Full Body Master Checkup',
                   prefixIcon: Icons.subtitles_outlined,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Enter subtitle' : null,
                 ),
                 const SizedBox(height: 12),
 
@@ -455,6 +493,20 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
                 ),
                 const SizedBox(height: 12),
 
+                _sectionLabel('Where on the home screen?'),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _choice('Top carousel', _placement == PromoBanner.placementTop,
+                        () => setState(() => _placement = PromoBanner.placementTop)),
+                    _choice('Mid-page (after Most booked)', _placement == PromoBanner.placementMiddle,
+                        () => setState(() => _placement = PromoBanner.placementMiddle)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _sectionLabel('When a patient taps the banner, open…'),
+                _buildLinkPicker(),
+                const SizedBox(height: 6),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Show Banner in Patient App', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
@@ -473,6 +525,101 @@ class _EditBannerDialogState extends State<EditBannerDialog> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _sectionLabel(String t) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(t, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.textSecondary)),
+      );
+
+  Widget _choice(String label, bool selected, VoidCallback onTap) => ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        showCheckmark: false,
+        selectedColor: AppColors.primary,
+        labelStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: selected ? Colors.white : AppColors.textPrimary),
+        onSelected: (_) => onTap(),
+      );
+
+  InputDecoration _dropdownDecoration(String hint) => InputDecoration(
+        hintText: hint,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      );
+
+  Widget _buildLinkPicker() {
+    final admin = context.watch<AdminProvider>();
+    const types = {
+      'none': 'Default (category listing)',
+      'url': 'Website / external link',
+      'package': 'A health package',
+      'test': 'A single test',
+      'section': 'A lab section (e.g. For Women)',
+      'category': 'A test category',
+    };
+
+    Widget valuePicker;
+    switch (_linkType) {
+      case 'url':
+        valuePicker = CustomTextField(
+          controller: _urlController,
+          label: 'Link URL',
+          hint: 'https://precisioncare.in/offer',
+          prefixIcon: Icons.link_rounded,
+          validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter a link' : null,
+        );
+        break;
+      case 'package':
+        valuePicker = _valueDropdown('Choose package', {for (final p in admin.packages) p.id: p.name});
+        break;
+      case 'test':
+        valuePicker = _valueDropdown('Choose test', {for (final t in admin.catalogServices) t.id: t.title});
+        break;
+      case 'section':
+        valuePicker = _valueDropdown('Choose section', {for (final a in admin.labAudiences) a.id: a.name});
+        break;
+      case 'category':
+        valuePicker = _valueDropdown('Choose category', {for (final c in admin.categories) c.name: c.name});
+        break;
+      default:
+        valuePicker = const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        DropdownButtonFormField<String>(
+          value: _linkType,
+          isExpanded: true,
+          decoration: _dropdownDecoration('Tap action'),
+          items: [for (final e in types.entries) DropdownMenuItem(value: e.key, child: Text(e.value, style: const TextStyle(fontSize: 13)))],
+          onChanged: (v) => setState(() {
+            _linkType = v ?? 'none';
+            _linkValue = null;
+          }),
+        ),
+        if (_linkType != 'none') ...[
+          const SizedBox(height: 10),
+          // Fresh field state per link type so a stale selection never leaks across types.
+          KeyedSubtree(key: ValueKey(_linkType), child: valuePicker),
+        ],
+      ],
+    );
+  }
+
+  Widget _valueDropdown(String hint, Map<String, String> options) {
+    return DropdownButtonFormField<String>(
+      value: options.containsKey(_linkValue) ? _linkValue : null,
+      isExpanded: true,
+      decoration: _dropdownDecoration(hint),
+      hint: Text(options.isEmpty ? 'Nothing to choose yet' : hint, style: const TextStyle(fontSize: 13)),
+      items: [
+        for (final e in options.entries)
+          DropdownMenuItem(value: e.key, child: Text(e.value, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
+      ],
+      validator: (v) => v == null ? 'Pick one' : null,
+      onChanged: (v) => setState(() => _linkValue = v),
     );
   }
 }

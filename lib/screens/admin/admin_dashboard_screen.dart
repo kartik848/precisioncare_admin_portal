@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../core/utils/search_matcher.dart';
+import '../../providers/catalog_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/booking_model.dart';
 import '../../models/diagnostic_service.dart';
@@ -8,6 +11,8 @@ import '../../models/promo_banner.dart';
 import '../../models/staff_model.dart';
 import '../../models/user_profile.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/auth_provider.dart';
+import 'admin_login_screen.dart';
 import '../../widgets/app_image_view.dart';
 import '../../widgets/empty_state.dart';
 import 'widgets/add_staff_dialog.dart';
@@ -15,6 +20,10 @@ import 'widgets/add_test_dialog.dart';
 import 'widgets/add_category_dialog.dart';
 import 'widgets/booking_action_dialog.dart';
 import 'widgets/edit_banner_dialog.dart';
+import 'widgets/edit_package_dialog.dart';
+import 'widgets/lab_sections_tab.dart';
+import 'widgets/home_collections_tab.dart';
+import '../../models/health_package.dart';
 import 'widgets/upload_report_dialog.dart';
 import 'widgets/send_patient_reminder_dialog.dart';
 import '../../core/utils/field_order_pdf_generator.dart';
@@ -43,6 +52,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'Diagnostic Test Catalog',
     'Promotional Banners & Offers',
     'Patient Users Directory',
+    'Health Packages & Offers',
+    'Lab Sections (Women, Men, Children…)',
+    'Home Sections (Fever, Lifestyle, Athlete…)',
   ];
 
   final TextEditingController _catalogSearchController = TextEditingController();
@@ -103,6 +115,58 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   void _openEditBannerDialog(PromoBanner banner) {
     showDialog(context: context, builder: (_) => EditBannerDialog(banner: banner));
+  }
+
+  void _confirmSignOut(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.error),
+            SizedBox(width: 8),
+            Text('Sign Out', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to sign out from the PrecisionCare Admin Portal?',
+          style: TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await context.read<AuthProvider>().signOut();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Signed out from Admin Portal'),
+                    backgroundColor: AppColors.secondary,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
+                  (route) => false,
+                );
+              }
+            },
+            icon: const Icon(Icons.logout_rounded, size: 16),
+            label: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w700)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _openPrescriptionViewerDialog({String? targetUserId, String? targetPatientName}) {
@@ -303,8 +367,92 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  Widget _buildUnauthorizedAccessView() {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          margin: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF1F2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.lock_person_rounded, size: 48, color: AppColors.error),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Admin Authentication Required',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'You must be signed in with an authorized Administrator account to view and manage PrecisionCare diagnostic operations.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
+                      (route) => false,
+                    );
+                  },
+                  icon: const Icon(Icons.login_rounded, size: 18, color: Colors.white),
+                  label: const Text(
+                    'Sign In as Admin',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    if (!auth.isAuthenticated || !auth.isAdmin) {
+      return _buildUnauthorizedAccessView();
+    }
+
     final admin = context.watch<AdminProvider>();
 
     final pending = admin.pendingRequests;
@@ -379,6 +527,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   icon: const Icon(Icons.notification_add_rounded, color: AppColors.accent, size: 20),
                   tooltip: 'Push Patient Reminder',
                   onPressed: () => _openSendReminderDialog(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  child: OutlinedButton.icon(
+                    onPressed: () => _confirmSignOut(context),
+                    icon: const Icon(Icons.logout_rounded, color: Color(0xFFFCA5A5), size: 14),
+                    label: const Text(
+                      'Logout',
+                      style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 11, fontWeight: FontWeight.w700),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0x66FCA5A5)),
+                      backgroundColor: const Color(0x26EF4444),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -553,34 +718,101 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     badgeCount: usersCount,
                     isDrawer: isDrawer,
                   ),
+                  _buildSidebarItem(
+                    index: 7,
+                    icon: Icons.inventory_2_outlined,
+                    label: 'Health Packages',
+                    badgeCount: admin.packages.length,
+                    isDrawer: isDrawer,
+                  ),
+                  _buildSidebarItem(
+                    index: 8,
+                    icon: Icons.groups_rounded,
+                    label: 'Lab Sections',
+                    badgeCount: admin.labAudiences.length,
+                    isDrawer: isDrawer,
+                  ),
+                  _buildSidebarItem(
+                    index: 9,
+                    icon: Icons.view_agenda_rounded,
+                    label: 'Home Sections',
+                    badgeCount: admin.homeCollections.length,
+                    isDrawer: isDrawer,
+                  ),
                 ],
               ),
             ),
 
             // Bottom Sidebar Actions
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Color(0xFF1E293B))),
-              ),
-              child: const Row(
-                children: [
-                  CircleAvatar(
-                    radius: 12,
-                    backgroundColor: AppColors.primaryLight,
-                    child: Icon(Icons.shield_rounded, size: 14, color: AppColors.primary),
+            Builder(
+              builder: (ctx) {
+                final auth = ctx.watch<AuthProvider>();
+                final email = auth.user?.email.isNotEmpty == true ? auth.user!.email : 'admin@precisioncare.com';
+                final name = auth.user?.name.isNotEmpty == true ? auth.user!.name : 'Clinic Admin';
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF0B1120),
+                    border: Border(top: BorderSide(color: Color(0xFF1E293B))),
                   ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Administrator (Active Session)',
-                      style: TextStyle(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.w600),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 14,
+                            backgroundColor: Color(0xFF1E293B),
+                            child: Icon(Icons.shield_rounded, size: 16, color: AppColors.accent),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  email,
+                                  style: const TextStyle(color: Colors.white54, fontSize: 9.5),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            if (isDrawer) Navigator.pop(context);
+                            _confirmSignOut(context);
+                          },
+                          icon: const Icon(Icons.logout_rounded, size: 14, color: Color(0xFFF87171)),
+                          label: const Text(
+                            'Logout Admin',
+                            style: TextStyle(color: Color(0xFFF87171), fontSize: 11.5, fontWeight: FontWeight.w700),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0x33F87171)),
+                            backgroundColor: const Color(0x1AF87171),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -659,6 +891,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       {'title': 'Catalog', 'badge': null, 'icon': Icons.science_outlined},
       {'title': 'Banners', 'badge': null, 'icon': Icons.view_carousel_outlined},
       {'title': 'Users', 'badge': null, 'icon': Icons.people_alt_outlined},
+      {'title': 'Packages', 'badge': null, 'icon': Icons.inventory_2_outlined},
+      {'title': 'Lab Sections', 'badge': null, 'icon': Icons.groups_rounded},
+      {'title': 'Home Sections', 'badge': null, 'icon': Icons.view_agenda_rounded},
     ];
 
     return Container(
@@ -764,6 +999,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 ),
               ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: () => _confirmSignOut(context),
+                icon: const Icon(Icons.logout_rounded, size: 16, color: AppColors.error),
+                label: const Text(
+                  'Logout',
+                  style: TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w700),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFFECDD3)),
+                  backgroundColor: const Color(0xFFFFF1F2),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
             ],
           ),
         ],
@@ -856,6 +1106,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return _buildBannersTab(banners);
       case 6:
         return _buildUsersTab(users);
+      case 7:
+        return _buildPackagesTab(admin);
+      case 8:
+        return const LabSectionsTab();
+      case 9:
+        return const HomeCollectionsTab();
       default:
         return _buildBookingsQueue(pending);
     }
@@ -883,8 +1139,125 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         icon: const Icon(Icons.add_circle_outline, color: Colors.white),
         label: const Text('Add to Catalog', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       );
+    } else if (_selectedNavIndex == 7) {
+      return FloatingActionButton.extended(
+        onPressed: _openNewPackage,
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text('New Package', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      );
+    } else if (_selectedNavIndex == 8 && context.read<AdminProvider>().labAudiences.isNotEmpty) {
+      return FloatingActionButton.extended(
+        onPressed: () => LabSectionsTab.openNewSection(context),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text('New Section', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      );
+    } else if (_selectedNavIndex == 9 && context.read<AdminProvider>().homeCollections.isNotEmpty) {
+      return FloatingActionButton.extended(
+        onPressed: () => HomeCollectionsTab.openNew(context),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text('New Home Section', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      );
     }
     return null;
+  }
+
+  void _openNewPackage() {
+    showDialog(
+      context: context,
+      builder: (_) => EditPackageDialog(
+        isNew: true,
+        package: HealthPackage(id: 'PKG-${DateTime.now().millisecondsSinceEpoch}', name: '', price: 0),
+      ),
+    );
+  }
+
+  // 7. HEALTH PACKAGES TAB
+  Widget _buildPackagesTab(AdminProvider admin) {
+    final packages = admin.packages;
+    if (packages.isEmpty) {
+      return EmptyState(
+        icon: Icons.inventory_2_outlined,
+        title: 'No Health Packages Yet',
+        description: 'Create a package with a poster, offer and the tests it includes. It appears on the patient home screen.',
+        buttonText: 'Create Package',
+        onButtonPressed: _openNewPackage,
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+      itemCount: packages.length,
+      itemBuilder: (context, i) {
+        final pkg = packages[i];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (pkg.posterUrl != null)
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: AppImageView(imageUrl: pkg.posterUrl!, fit: BoxFit.cover),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(child: Text(pkg.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15))),
+                              if (pkg.isFeatured) ...[
+                                const SizedBox(width: 6),
+                                const Icon(Icons.star_rounded, size: 16, color: AppColors.warning),
+                              ],
+                              if (pkg.tag.isNotEmpty) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(color: const Color(0xFF1D4ED8), borderRadius: BorderRadius.circular(4)),
+                                  child: Text(pkg.tag, style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w800)),
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (pkg.offerText.isNotEmpty)
+                            Text(pkg.offerText, style: const TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${pkg.testCount} tests • ₹${pkg.price.toStringAsFixed(0)}${pkg.reportTime.isNotEmpty ? ' • Report in ${pkg.reportTime}' : ''}${pkg.isActive ? '' : ' • HIDDEN'}',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, color: AppColors.info),
+                      onPressed: () => showDialog(context: context, builder: (_) => EditPackageDialog(package: pkg)),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                      onPressed: () => admin.deletePackage(pkg.id),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // 1 & 2. BOOKINGS QUEUE
@@ -1391,32 +1764,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           )
         else
           ...categories.map((category) {
-            final linkedTests = catalog.where((s) {
-              if (s.categoryId == category.id) return true;
-              if (s.categoryName.trim().toLowerCase() == category.name.trim().toLowerCase()) return true;
-              if (category.id == 'cat_xray') {
-                return s.iconType == 'xray' || s.title.toLowerCase().contains('x-ray') || s.title.toLowerCase().contains('xray');
-              }
-              if (category.id == 'cat_blood') {
-                return s.iconType == 'blood' || s.category == ServiceCategory.homeVisit;
-              }
-              if (category.id == 'cat_ecg') {
-                return s.iconType == 'ecg' || s.title.toLowerCase().contains('ecg') || s.title.toLowerCase().contains('stress');
-              }
-              if (category.id == 'cat_usg') {
-                return s.iconType == 'usg' || s.title.toLowerCase().contains('ultrasound');
-              }
-              if (category.id == 'cat_pft') {
-                return s.iconType == 'pft' || s.title.toLowerCase().contains('pft') || s.title.toLowerCase().contains('spirometry');
-              }
-              if (category.id == 'cat_physio') {
-                return s.iconType == 'physio' || s.category == ServiceCategory.physiotherapy;
-              }
-              if (category.id == 'cat_packages') {
-                return s.category == ServiceCategory.healthPackage || s.includedTests.length > 5;
-              }
-              return false;
-            }).toList();
+            final linkedTests = catalog.where((s) => _testBelongsToCategory(s, category)).toList();
 
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
@@ -1644,44 +1992,117 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  IconData _getServiceIcon(String iconType) {
+    switch (iconType) {
+      case 'blood':
+        return Icons.water_drop_rounded;
+      case 'xray':
+        return Icons.camera_enhance_rounded;
+      case 'ecg':
+        return Icons.monitor_heart_rounded;
+      case 'stress_test':
+        return Icons.directions_run_rounded;
+      case 'usg':
+        return Icons.waves_rounded;
+      case 'pft':
+        return Icons.air_rounded;
+      case 'physio':
+        return Icons.accessibility_new_rounded;
+      case 'package':
+        return Icons.inventory_2_outlined;
+      default:
+        return Icons.medical_services_rounded;
+    }
+  }
+
+  Color _getServiceBadgeColor(String iconType) {
+    switch (iconType) {
+      case 'blood':
+        return AppColors.bloodTestBadge;
+      case 'xray':
+        return AppColors.xrayBadge;
+      case 'ecg':
+        return AppColors.ecgBadge;
+      case 'stress_test':
+        return AppColors.stressTestBadge;
+      case 'usg':
+        return const Color(0xFF0891B2);
+      case 'pft':
+        return AppColors.pftBadge;
+      case 'physio':
+        return AppColors.physioBadge;
+      case 'package':
+        return const Color(0xFFD97706);
+      default:
+        return AppColors.primary;
+    }
+  }
+
   // Helper to determine if a test belongs to a specific category
   bool _testBelongsToCategory(DiagnosticService test, DiagnosticCategory cat) {
-    if (test.categoryId != null && test.categoryId == cat.id) return true;
-
     final catLower = cat.name.trim().toLowerCase();
     final catIdLower = cat.id.toLowerCase();
+    final titleLower = test.title.toLowerCase();
+    final testCatNameLower = test.categoryName.trim().toLowerCase();
 
-    // 1. Digital X-Ray - STRICT
+    // 1. Digital X-Ray - STRICT: Exclude blood and other non-xray modalities
     if (catIdLower == 'cat_xray' || catLower.contains('x-ray') || catLower.contains('xray')) {
-      if (test.categoryId == 'cat_blood' || test.categoryId == 'cat_ecg' || test.categoryId == 'cat_usg' || test.categoryId == 'cat_pft' || test.categoryId == 'cat_physio' || test.categoryId == 'cat_packages') {
+      if (test.categoryId == 'cat_blood' ||
+          test.iconType == 'blood' ||
+          testCatNameLower.contains('blood') ||
+          titleLower.contains('blood') ||
+          titleLower.contains('cbc') ||
+          titleLower.contains('lipid') ||
+          titleLower.contains('thyroid') ||
+          titleLower.contains('glucose') ||
+          titleLower.contains('sugar') ||
+          titleLower.contains('diabetes') ||
+          titleLower.contains('hemoglobin') ||
+          titleLower.contains('hba1c') ||
+          titleLower.contains('serum')) {
         return false;
       }
+      if (test.categoryId == 'cat_ecg' || test.iconType == 'ecg' || titleLower.contains('ecg') || testCatNameLower.contains('ecg')) return false;
+      if (test.categoryId == 'cat_usg' || test.iconType == 'usg' || titleLower.contains('ultrasound') || testCatNameLower.contains('ultrasound')) return false;
+      if (test.categoryId == 'cat_pft' || test.iconType == 'pft' || titleLower.contains('pft') || testCatNameLower.contains('pft')) return false;
+      if (test.categoryId == 'cat_physio' || test.iconType == 'physio' || test.category == ServiceCategory.physiotherapy) return false;
+      if (test.categoryId == 'cat_packages' || test.category == ServiceCategory.healthPackage) return false;
+
       return test.categoryId == 'cat_xray' ||
           test.iconType == 'xray' ||
-          test.categoryName.toLowerCase().contains('x-ray') ||
-          test.categoryName.toLowerCase().contains('xray') ||
-          test.title.toLowerCase().contains('x-ray') ||
-          test.title.toLowerCase().contains('xray');
+          testCatNameLower.contains('x-ray') ||
+          testCatNameLower.contains('xray') ||
+          titleLower.contains('x-ray') ||
+          titleLower.contains('xray') ||
+          titleLower.contains('radiograph');
     }
 
-    // 2. Blood Tests - STRICT
+    // 2. Blood Tests - STRICT: Exclude X-Ray and other non-blood modalities
     if (catIdLower == 'cat_blood' || catLower.contains('blood')) {
-      if (test.categoryId == 'cat_xray' || test.categoryId == 'cat_ecg' || test.categoryId == 'cat_usg' || test.categoryId == 'cat_pft' || test.categoryId == 'cat_physio' || test.categoryId == 'cat_packages') {
+      final isXray = test.iconType == 'xray' ||
+          test.categoryId == 'cat_xray' ||
+          testCatNameLower.contains('x-ray') ||
+          testCatNameLower.contains('xray') ||
+          titleLower.contains('x-ray') ||
+          titleLower.contains('xray') ||
+          titleLower.contains('radiograph');
+      if (isXray || test.categoryId == 'cat_packages' || test.category == ServiceCategory.healthPackage) return false;
+      if (test.categoryId == 'cat_ecg' || test.categoryId == 'cat_usg' || test.categoryId == 'cat_pft' || test.categoryId == 'cat_physio') {
         return false;
       }
-      final isXray = test.iconType == 'xray' ||
-          test.title.toLowerCase().contains('x-ray') ||
-          test.title.toLowerCase().contains('xray');
-      if (isXray || test.categoryId == 'cat_packages' || test.category == ServiceCategory.healthPackage) return false;
       return test.categoryId == 'cat_blood' ||
           test.iconType == 'blood' ||
-          test.categoryName.toLowerCase().contains('blood') ||
-          test.title.toLowerCase().contains('blood') ||
-          test.title.toLowerCase().contains('cbc') ||
-          test.title.toLowerCase().contains('lipid') ||
-          test.title.toLowerCase().contains('thyroid') ||
-          test.title.toLowerCase().contains('diabetes');
+          testCatNameLower.contains('blood') ||
+          titleLower.contains('blood') ||
+          titleLower.contains('cbc') ||
+          titleLower.contains('lipid') ||
+          titleLower.contains('thyroid') ||
+          titleLower.contains('diabetes') ||
+          titleLower.contains('sugar') ||
+          titleLower.contains('glucose');
     }
+
+    if (test.categoryId != null && test.categoryId == cat.id) return true;
 
     // 3. ECG & Cardiology - STRICT
     if (catIdLower == 'cat_ecg' || catLower.contains('ecg') || catLower.contains('cardio') || catLower.contains('heart')) {
@@ -1779,20 +2200,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     // 2. Filter by search query (name, category, price, description)
     final query = _catalogSearchQuery.trim().toLowerCase();
     if (query.isNotEmpty) {
-      filtered = filtered.where((test) {
-        final title = test.title.toLowerCase();
-        final cat = test.categoryName.toLowerCase();
-        final desc = test.description.toLowerCase();
-        final price = test.price.toInt().toString();
-        final origPrice = test.originalPrice?.toInt().toString() ?? '';
-        final sample = test.sampleType.toLowerCase();
-        return title.contains(query) ||
-            cat.contains(query) ||
-            desc.contains(query) ||
-            price.contains(query) ||
-            origPrice.contains(query) ||
-            sample.contains(query);
-      }).toList();
+      filtered = SearchMatcher.rank(filtered, query, (test) => [
+            ...CatalogProvider.searchFieldsOf(test),
+            test.price.toInt().toString(),
+            test.originalPrice?.toInt().toString(),
+          ]);
     }
 
     return ListView.builder(
@@ -2320,10 +2732,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.08),
+                  color: _getServiceBadgeColor(test.iconType).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.science_outlined, color: AppColors.primary, size: 24),
+                child: Icon(_getServiceIcon(test.iconType), color: _getServiceBadgeColor(test.iconType), size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -2341,12 +2753,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
+                            color: _getServiceBadgeColor(test.iconType).withOpacity(0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             test.categoryName,
-                            style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.primaryDark),
+                            style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: _getServiceBadgeColor(test.iconType)),
                           ),
                         ),
                       ],
@@ -2508,7 +2920,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Top Home Carousel Banners & Offers',
+                          'Home Banners & Offers (Top + Mid-page)',
                           style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
                         ),
                         const SizedBox(height: 2),
@@ -2636,7 +3048,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const SizedBox(height: 4),
                     Text(banner.subtitle, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
                     const SizedBox(height: 4),
-                    Text('Action Button: "${banner.actionText}" • Target: ${banner.categoryTarget}', style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
+                    Text(
+                      '${banner.placement == PromoBanner.placementMiddle ? 'Mid-page banner' : 'Top carousel'}'
+                      '${banner.isActive ? '' : ' • HIDDEN'}'
+                      ' • Opens: ${banner.linkUrl.isNotEmpty ? banner.linkUrl : banner.categoryTarget}',
+                      style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted),
+                    ),
                   ],
                 ),
               ),

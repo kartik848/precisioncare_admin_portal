@@ -139,15 +139,20 @@ class _BookingActionDialogState extends State<BookingActionDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.assignment_turned_in_rounded, color: AppColors.primary, size: 24),
-                        SizedBox(width: 8),
-                        Text(
-                          'Accept & Assign Staff',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-                        ),
-                      ],
+                    const Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.assignment_turned_in_rounded, color: AppColors.primary, size: 24),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Accept & Assign Staff',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, size: 20),

@@ -1,4 +1,7 @@
 class PromoBanner {
+  static const placementTop = 'top';
+  static const placementMiddle = 'middle';
+
   final String id;
   final String title;
   final String subtitle;
@@ -7,6 +10,13 @@ class PromoBanner {
   final String actionText;
   final String categoryTarget;
   final bool isActive;
+
+  /// Where the banner is shown on the home screen: [placementTop] or [placementMiddle].
+  final String placement;
+
+  /// What happens on tap. Supports `https://…`, `tel:…`, `package:<id>`, `test:<id>`,
+  /// `section:<audienceId>` and `category:<name>`. Empty falls back to [categoryTarget].
+  final String linkUrl;
 
   const PromoBanner({
     required this.id,
@@ -17,6 +27,8 @@ class PromoBanner {
     this.actionText = 'Book Now',
     this.categoryTarget = 'all',
     this.isActive = true,
+    this.placement = placementTop,
+    this.linkUrl = '',
   });
 
   PromoBanner copyWith({
@@ -25,19 +37,24 @@ class PromoBanner {
     String? subtitle,
     String? badge,
     String? imageUrl,
+    bool clearImage = false,
     String? actionText,
     String? categoryTarget,
     bool? isActive,
+    String? placement,
+    String? linkUrl,
   }) {
     return PromoBanner(
       id: id ?? this.id,
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
       badge: badge ?? this.badge,
-      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrl: clearImage ? imageUrl : (imageUrl ?? this.imageUrl),
       actionText: actionText ?? this.actionText,
       categoryTarget: categoryTarget ?? this.categoryTarget,
       isActive: isActive ?? this.isActive,
+      placement: placement ?? this.placement,
+      linkUrl: linkUrl ?? this.linkUrl,
     );
   }
 
@@ -51,6 +68,8 @@ class PromoBanner {
       'actionText': actionText,
       'categoryTarget': categoryTarget,
       'isActive': isActive,
+      'placement': placement,
+      'linkUrl': linkUrl,
     };
   }
 
@@ -64,6 +83,8 @@ class PromoBanner {
       actionText: map['actionText'] ?? 'Book Now',
       categoryTarget: map['categoryTarget'] ?? 'all',
       isActive: map['isActive'] ?? true,
+      placement: map['placement'] == placementMiddle ? placementMiddle : placementTop,
+      linkUrl: map['linkUrl'] ?? '',
     );
   }
 }

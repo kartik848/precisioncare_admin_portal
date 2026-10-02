@@ -14,6 +14,8 @@ class CustomTextField extends StatelessWidget {
   final VoidCallback? onTap;
   final ValueChanged<String>? onChanged;
   final int maxLines;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onFieldSubmitted;
 
   const CustomTextField({
     super.key,
@@ -29,6 +31,8 @@ class CustomTextField extends StatelessWidget {
     this.onTap,
     this.onChanged,
     this.maxLines = 1,
+    this.textInputAction,
+    this.onFieldSubmitted,
   });
 
   @override
@@ -53,6 +57,8 @@ class CustomTextField extends StatelessWidget {
           onTap: onTap,
           onChanged: onChanged,
           maxLines: maxLines,
+          textInputAction: textInputAction,
+          onFieldSubmitted: onFieldSubmitted,
           validator: validator,
           style: const TextStyle(
             fontSize: 14,
