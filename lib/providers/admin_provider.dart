@@ -12,6 +12,8 @@ import '../services/lab_section_service.dart';
 import '../models/home_collection.dart';
 import '../services/home_collection_service.dart';
 import '../services/home_defaults.dart';
+import '../models/specialist.dart';
+import '../services/specialist_service.dart';
 import '../models/user_profile.dart';
 import '../models/diagnostic_service.dart';
 import '../models/diagnostic_category.dart';
@@ -33,6 +35,10 @@ class AdminProvider with ChangeNotifier {
   final PackageService _packageService = PackageService();
   final LabSectionService _labSectionService = LabSectionService();
   final HomeCollectionService _collectionService = HomeCollectionService();
+  final SpecialistService _specialistService = SpecialistService();
+  StreamSubscription<List<Specialist>>? _specialistsStreamSub;
+  List<Specialist> _specialists = [];
+  List<Specialist> get specialists => _specialists;
   final AuthService _authService = AuthService();
   final CatalogService _catalogService = CatalogService();
   final CategoryService _categoryService = CategoryService();
@@ -105,6 +111,10 @@ class AdminProvider with ChangeNotifier {
     _startPackagesSync();
     _labStreamSub = _labSectionService.streamAudiences().listen((list) {
       _labAudiences = list;
+      notifyListeners();
+    });
+    _specialistsStreamSub = _specialistService.streamSpecialists().listen((list) {
+      _specialists = list;
       notifyListeners();
     });
     _collectionsStreamSub = _collectionService.streamCollections().listen((list) {
@@ -180,6 +190,7 @@ class AdminProvider with ChangeNotifier {
     _packagesStreamSub?.cancel();
     _labStreamSub?.cancel();
     _collectionsStreamSub?.cancel();
+    _specialistsStreamSub?.cancel();
     _catalogStreamSub?.cancel();
     _categoriesStreamSub?.cancel();
     super.dispose();
@@ -305,6 +316,18 @@ class AdminProvider with ChangeNotifier {
   Future<void> deleteCollectionGroup(HomeCollection c, String groupId) {
     final fresh = _homeCollections.firstWhere((x) => x.id == c.id, orElse: () => c);
     return saveHomeCollection(fresh.copyWith(groups: fresh.groups.where((g) => g.id != groupId).toList()));
+  }
+
+  // SPECIALISTS (home "Consult specialists & lab doctors")
+  Future<void> saveSpecialist(Specialist s) => _specialistService.save(s);
+
+  Future<void> deleteSpecialist(String id) => _specialistService.delete(id);
+
+  /// Copies the built-in doctors into Firestore so the admin can edit their photos and text.
+  Future<void> seedStarterSpecialists() async {
+    for (final s in SpecialistService.defaults) {
+      await _specialistService.save(s);
+    }
   }
 
   Future<void> seedStarterCollections() async {

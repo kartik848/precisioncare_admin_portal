@@ -23,6 +23,7 @@ import 'widgets/edit_banner_dialog.dart';
 import 'widgets/edit_package_dialog.dart';
 import 'widgets/lab_sections_tab.dart';
 import 'widgets/home_collections_tab.dart';
+import 'widgets/specialists_tab.dart';
 import '../../models/health_package.dart';
 import 'widgets/upload_report_dialog.dart';
 import 'widgets/send_patient_reminder_dialog.dart';
@@ -55,6 +56,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'Health Packages & Offers',
     'Lab Sections (Women, Men, Children…)',
     'Home Sections (Fever, Lifestyle, Athlete…)',
+    'Specialists & Lab Doctors',
   ];
 
   final TextEditingController _catalogSearchController = TextEditingController();
@@ -739,6 +741,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     badgeCount: admin.homeCollections.length,
                     isDrawer: isDrawer,
                   ),
+                  _buildSidebarItem(
+                    index: 10,
+                    icon: Icons.medical_services_rounded,
+                    label: 'Specialists',
+                    badgeCount: admin.specialists.length,
+                    isDrawer: isDrawer,
+                  ),
                 ],
               ),
             ),
@@ -894,6 +903,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       {'title': 'Packages', 'badge': null, 'icon': Icons.inventory_2_outlined},
       {'title': 'Lab Sections', 'badge': null, 'icon': Icons.groups_rounded},
       {'title': 'Home Sections', 'badge': null, 'icon': Icons.view_agenda_rounded},
+      {'title': 'Specialists', 'badge': null, 'icon': Icons.medical_services_rounded},
     ];
 
     return Container(
@@ -1112,6 +1122,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return const LabSectionsTab();
       case 9:
         return const HomeCollectionsTab();
+      case 10:
+        return const SpecialistsTab();
       default:
         return _buildBookingsQueue(pending);
     }
@@ -1159,6 +1171,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text('New Home Section', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      );
+    } else if (_selectedNavIndex == 10 && context.read<AdminProvider>().specialists.isNotEmpty) {
+      return FloatingActionButton.extended(
+        onPressed: () => SpecialistsTab.openNew(context),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
+        label: const Text('New Specialist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       );
     }
     return null;

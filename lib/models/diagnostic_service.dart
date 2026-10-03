@@ -23,6 +23,9 @@ class DiagnosticService {
   final String? badge;
   final List<String> includedTests;
 
+  /// Optional admin-uploaded photo shown on cards; falls back to the icon artwork.
+  final String? imageUrl;
+
   const DiagnosticService({
     required this.id,
     required this.title,
@@ -40,6 +43,7 @@ class DiagnosticService {
     this.isInHouseAvailable = true,
     this.badge,
     this.includedTests = const [],
+    this.imageUrl,
   });
 
   factory DiagnosticService.fromMap(Map<String, dynamic> map, String id) {
@@ -115,6 +119,7 @@ class DiagnosticService {
       isInHouseAvailable: map['isInHouseAvailable'] ?? true,
       badge: map['badge'],
       includedTests: List<String>.from(map['includedTests'] ?? []),
+      imageUrl: (map['imageUrl'] as String?)?.trim().isEmpty ?? true ? null : map['imageUrl'] as String,
     );
   }
 
@@ -135,6 +140,8 @@ class DiagnosticService {
     bool? isInHouseAvailable,
     String? badge,
     List<String>? includedTests,
+    String? imageUrl,
+    bool clearImage = false,
   }) {
     return DiagnosticService(
       id: id ?? this.id,
@@ -153,6 +160,7 @@ class DiagnosticService {
       isInHouseAvailable: isInHouseAvailable ?? this.isInHouseAvailable,
       badge: badge ?? this.badge,
       includedTests: includedTests ?? this.includedTests,
+      imageUrl: clearImage ? imageUrl : (imageUrl ?? this.imageUrl),
     );
   }
 
@@ -173,6 +181,7 @@ class DiagnosticService {
       'isInHouseAvailable': isInHouseAvailable,
       'badge': badge,
       'includedTests': includedTests,
+      'imageUrl': imageUrl,
     };
   }
 }

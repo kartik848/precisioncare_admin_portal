@@ -8,6 +8,7 @@ import '../../../providers/catalog_provider.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_text_field.dart';
 import 'add_category_dialog.dart';
+import 'image_upload_field.dart';
 
 class AddTestDialog extends StatefulWidget {
   final DiagnosticService? testToEdit;
@@ -39,6 +40,7 @@ class _AddTestDialogState extends State<AddTestDialog> {
   late TextEditingController _badgeController;
 
   String? _selectedCategoryId;
+  String? _imageUrl;
   String _iconType = 'blood';
   ServiceCategory _category = ServiceCategory.homeVisit;
   bool _isHomeVisitAvailable = true;
@@ -117,6 +119,7 @@ class _AddTestDialogState extends State<AddTestDialog> {
 
     if (widget.testToEdit != null) {
       _selectedCategoryId = widget.testToEdit!.categoryId;
+      _imageUrl = widget.testToEdit!.imageUrl;
       _iconType = widget.testToEdit!.iconType;
       _category = widget.testToEdit!.category;
       _isHomeVisitAvailable = widget.testToEdit!.isHomeVisitAvailable;
@@ -168,10 +171,14 @@ class _AddTestDialogState extends State<AddTestDialog> {
       isHomeVisitAvailable: _isHomeVisitAvailable,
       isInHouseAvailable: _isInHouseAvailable,
       badge: _badgeController.text.trim().isNotEmpty ? _badgeController.text.trim() : null,
-      includedTests: [
-        '${_titleController.text.trim()} Primary Investigation',
-        'Clinical Pathology Review & Digital Sign-off',
-      ],
+      imageUrl: _imageUrl,
+      // Keep the real parameter list when editing; placeholders only for brand-new tests.
+      includedTests: (widget.testToEdit?.includedTests.isNotEmpty ?? false)
+          ? widget.testToEdit!.includedTests
+          : [
+              '${_titleController.text.trim()} Primary Investigation',
+              'Clinical Pathology Review & Digital Sign-off',
+            ],
     );
 
     await context.read<AdminProvider>().addDiagnosticTest(service);
@@ -252,6 +259,35 @@ class _AddTestDialogState extends State<AddTestDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Card photo (shown on home rails, lists and search)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 120,
+                            child: ImageUploadField(
+                              imageUrl: _imageUrl,
+                              aspectRatio: 1.1,
+                              hint: 'Test photo',
+                              namePrefix: 'precisioncare_test',
+                              onChanged: (v) => setState(() => _imageUrl = v),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 6),
+                              child: Text(
+                                'Card photo (optional)\nShown on the patient home, packages lists and search. '
+                                'Without a photo the app shows the category icon.',
+                                style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.4),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
                       // Package / Service Name
                       CustomTextField(
                         controller: _titleController,

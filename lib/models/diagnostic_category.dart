@@ -10,6 +10,12 @@ class DiagnosticCategory {
   final bool isInHouseAvailable;
   final int sortOrder;
 
+  /// Admin photo for the home "Shop by category" tile.
+  final String? imageUrl;
+
+  /// Whether the category appears in the home "Shop by category" grid.
+  final bool showOnHome;
+
   const DiagnosticCategory({
     required this.id,
     required this.name,
@@ -19,6 +25,8 @@ class DiagnosticCategory {
     this.isHomeVisitAvailable = true,
     this.isInHouseAvailable = true,
     this.sortOrder = 0,
+    this.imageUrl,
+    this.showOnHome = true,
   });
 
   factory DiagnosticCategory.fromMap(Map<String, dynamic> map, String id) {
@@ -31,6 +39,8 @@ class DiagnosticCategory {
       isHomeVisitAvailable: map['isHomeVisitAvailable'] ?? true,
       isInHouseAvailable: map['isInHouseAvailable'] ?? true,
       sortOrder: (map['sortOrder'] as num?)?.toInt() ?? 0,
+      imageUrl: (map['imageUrl'] as String?)?.trim().isEmpty ?? true ? null : map['imageUrl'] as String,
+      showOnHome: map['showOnHome'] ?? true,
     );
   }
 
@@ -43,6 +53,8 @@ class DiagnosticCategory {
       'isHomeVisitAvailable': isHomeVisitAvailable,
       'isInHouseAvailable': isInHouseAvailable,
       'sortOrder': sortOrder,
+      'imageUrl': imageUrl,
+      'showOnHome': showOnHome,
     };
   }
 

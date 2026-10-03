@@ -9,6 +9,8 @@ import '../models/lab_section.dart';
 import '../models/user_profile.dart';
 import '../models/home_collection.dart';
 import '../services/home_collection_service.dart';
+import '../models/specialist.dart';
+import '../services/specialist_service.dart';
 import '../services/home_defaults.dart';
 import '../services/lab_section_service.dart';
 import '../services/package_service.dart';
@@ -23,6 +25,9 @@ class CatalogProvider with ChangeNotifier {
   final PackageService _packageService = PackageService();
   final LabSectionService _labSectionService = LabSectionService();
   final HomeCollectionService _collectionService = HomeCollectionService();
+  final SpecialistService _specialistService = SpecialistService();
+  List<Specialist> _specialists = [];
+  StreamSubscription<List<Specialist>>? _specialistsSub;
 
   List<DiagnosticService> _allServices = [];
   List<DiagnosticCategory> _categories = [];
@@ -67,6 +72,10 @@ class CatalogProvider with ChangeNotifier {
       _labSectionsLoaded = true;
       notifyListeners();
     });
+    _specialistsSub = _specialistService.streamSpecialists().listen((list) {
+      _specialists = list;
+      notifyListeners();
+    });
     _collectionsSub = _collectionService.streamCollections().listen((list) {
       _collections = list;
       _collectionsLoaded = true;
@@ -90,6 +99,7 @@ class CatalogProvider with ChangeNotifier {
     _packagesSub?.cancel();
     _labSub?.cancel();
     _collectionsSub?.cancel();
+    _specialistsSub?.cancel();
     _loadingFallback?.cancel();
     super.dispose();
   }
@@ -130,6 +140,10 @@ class CatalogProvider with ChangeNotifier {
     _ensureDefaults();
     return _defaultAudiences;
   }
+
+  /// Home "Consult specialists" doctors; the original five until the admin adds their own.
+  List<Specialist> get specialists =>
+      _specialists.isNotEmpty ? _specialists.where((s) => s.isActive).toList() : SpecialistService.defaults;
 
   /// Curated home sections (Fever, Lifestyle, Athlete…), with the same built-in fallback.
   List<HomeCollection> get homeCollections {

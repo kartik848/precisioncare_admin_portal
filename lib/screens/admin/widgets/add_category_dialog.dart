@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'image_upload_field.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../models/diagnostic_category.dart';
 import '../../../providers/admin_provider.dart';
@@ -27,6 +28,8 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
   bool _isHomeVisitAvailable = true;
   bool _isInHouseAvailable = true;
   bool _isSaving = false;
+  String? _imageUrl;
+  bool _showOnHome = true;
 
   final List<Map<String, dynamic>> _iconOptions = [
     {'type': 'xray', 'label': 'X-Ray / Radiology', 'icon': Icons.medical_information_rounded},
@@ -50,6 +53,8 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
       _iconType = widget.categoryToEdit!.iconType;
       _isHomeVisitAvailable = widget.categoryToEdit!.isHomeVisitAvailable;
       _isInHouseAvailable = widget.categoryToEdit!.isInHouseAvailable;
+      _imageUrl = widget.categoryToEdit!.imageUrl;
+      _showOnHome = widget.categoryToEdit!.showOnHome;
     }
   }
 
@@ -79,6 +84,8 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
       isHomeVisitAvailable: _isHomeVisitAvailable,
       isInHouseAvailable: _isInHouseAvailable,
       sortOrder: widget.categoryToEdit?.sortOrder ?? 10,
+      imageUrl: _imageUrl,
+      showOnHome: _showOnHome,
     );
 
     await context.read<AdminProvider>().addCategory(category);
@@ -147,6 +154,44 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Home "Shop by category" tile
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 110,
+                            child: ImageUploadField(
+                              imageUrl: _imageUrl,
+                              hint: 'Tile photo',
+                              namePrefix: 'precisioncare_category',
+                              onChanged: (v) => setState(() => _imageUrl = v),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Home "Shop by category" tile',
+                                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                                const SizedBox(height: 2),
+                                const Text('Square photo works best. Without one, the category icon is shown.',
+                                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                SwitchListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  activeColor: AppColors.primary,
+                                  title: const Text('Show on patient home', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                                  value: _showOnHome,
+                                  onChanged: (v) => setState(() => _showOnHome = v),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
                       // Category Name
                       CustomTextField(
                         controller: _nameController,
