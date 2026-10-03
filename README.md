@@ -35,5 +35,11 @@ Both talk to the same Firebase project (`precision-care-2ab84`), so every change
 flutter pub get
 flutter build web --release   # output: build/web
 ```
-Commit `build/web` — Vercel serves it as configured in `vercel.json`:
-- **Live URL**: `https://precisioncare-admin-portal.vercel.app`
+Commit `build/web`, then deploy that folder to the Vercel project **admin-panel-precisioncare**
+(it is *not* connected to this GitHub repo, so a push alone does not update the live site):
+```bash
+cd build/web
+npx vercel link --yes --project admin-panel-precisioncare
+npx vercel deploy --prod --yes
+```
+- **Live URL**: https://admin-panel-precisioncare.vercel.app
